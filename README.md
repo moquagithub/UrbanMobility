@@ -95,8 +95,8 @@ pip install -e .
 ### 3. Run the web app
 
 ```bash
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8080
-# → Open http://127.0.0.1:8080
+uvicorn app.main:app --reload --host 127.0.0.1 --port 9000
+# → Open http://127.0.0.1:9000
 ```
 
 ### 4. Or run the CLI demo
@@ -147,7 +147,7 @@ docker compose up --build -d
 docker compose logs -f bicyclelane
 
 # 4. Open the web explorer
-# → http://<DGX-IP>:8080
+# → http://<DGX-IP>:9000
 ```
 
 To stop:
@@ -165,7 +165,7 @@ docker build -t bicyclelane:latest .
 # Run with GPU access
 docker run --rm \
   --gpus all \
-  -p 8080:8080 \
+  -p 9000:9000 \
   -v $(pwd)/outputs:/app/outputs \
   -v $(pwd)/cache:/app/.cache \
   bicyclelane:latest
@@ -187,7 +187,7 @@ Set these in `docker-compose.yml` or as shell exports before running locally.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `HOST` | `0.0.0.0` | Bind address for uvicorn |
-| `PORT` | `8080` | HTTP port |
+| `PORT` | `9000` | HTTP port |
 | `OMP_NUM_THREADS` | `8` | OpenMP thread limit (Grace CPU tuning) |
 | `BICYCLELANE_INSEE` | _(none)_ | Path to INSEE gridded population file — adds real population weighting to D5 demand |
 | `BICYCLELANE_RIDERSHIP` | _(none)_ | Path to SNCF ridership CSV — sharpens D9 hub priorities |
@@ -208,13 +208,13 @@ Returns the list of available detectors with metadata.
 Submits a city analysis as a background job.
 
 ```bash
-curl -X POST "http://localhost:8080/api/analyze?city=Aix-en-Provence%2C+France"
+curl -X POST "http://localhost:9000/api/analyze?city=Aix-en-Provence%2C+France"
 # → {"job_id": "abc123", "status": "running"}
 ```
 
 Optional `bbox` restricts analysis to an area of interest (much faster for large cities):
 ```bash
-curl -X POST "http://localhost:8080/api/analyze?city=Paris%2C+France&bbox=2.33,48.85,2.37,48.87"
+curl -X POST "http://localhost:9000/api/analyze?city=Paris%2C+France&bbox=2.33,48.85,2.37,48.87"
 ```
 
 ### `GET /api/jobs/{job_id}`
@@ -279,7 +279,7 @@ pip install -e ".[dev]"
 python -m pytest -q
 
 # Run with auto-reload during development
-uvicorn app.main:app --reload --port 8080
+uvicorn app.main:app --reload --port 9000
 ```
 
 ### Optional extras
