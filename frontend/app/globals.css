@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Palette "instrument d'analyse" — slate neutre + teal comme accent de marque
+       (prolonge le choix déjà fait en DQE-6), rouge/ambre/vert réservés aux états
+       sémantiques de qualité de données (ok/attention/critique) pour ne jamais
+       entrer en conflit visuel avec l'accent de marque. */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 174 84% 24%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 33% 96%;
+    --muted-foreground: 215 16% 42%;
+
+    --accent: 174 45% 93%;
+    --accent-foreground: 174 84% 18%;
+
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 66% 30%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 42%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 214 30% 89%;
+    --input: 214 30% 89%;
+    --ring: 174 84% 24%;
+
+    --radius: 0.625rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+  }
+  /* Chiffres tabulaires pour les tableaux de données — alignement propre des colonnes numériques */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}

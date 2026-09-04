@@ -1,0 +1,17 @@
+[Unit]
+Description=Data Quiz EDA Frontend (Next.js)
+After=network.target eda-backend.service
+
+[Service]
+Type=simple
+User=dgxuser
+WorkingDirectory=/opt/eda/frontend
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=NEXT_PUBLIC_API_URL=
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

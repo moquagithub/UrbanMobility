@@ -1,0 +1,22 @@
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.32
+pandas==2.2.3
+numpy==1.26.4
+pydantic==2.10.4
+
+# DQE-7 — nouvelles dépendances pour les services d'analyse EDA
+scipy==1.14.1          # tests de normalité (page_normality) + normaltest dans recommendations_service
+scikit-learn==1.5.2    # PowerTransformer / StandardScaler (recommendations_service.apply_transformations)
+matplotlib==3.9.2      # requis par eda_analyse.py (fig_*_png, build_latex) — déjà une dépendance
+                       # transitive implicite du POC (import de niveau module dans eda_analyse.py),
+                       # rendue explicite ici puisque DQE-7 exerce réellement build_latex()/build_latex_summary()
+
+python-dotenv==1.0.1   # chargement de backend/.env (EDA_ANON_SALT, CORS_ALLOWED_ORIGINS)
+
+# Tests
+pytest==8.3.4
+httpx==0.28.1
+
+# Lint (DQE-12 — CI)
+ruff==0.8.4

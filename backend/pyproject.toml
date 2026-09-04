@@ -1,0 +1,14 @@
+[tool.ruff]
+# app/legacy/ est une copie strictement conforme du dépôt data-quiz-eda
+# d'origine (eda_analyse.py, pii_anonymizer.py, quiz_processor.py) — jamais
+# modifiée par la migration (voir README, principe "logique métier
+# conservée, pas réécrite"). On l'exclut du lint : la corriger reviendrait à
+# la réécrire, ce que le projet s'interdit explicitement.
+extend-exclude = ["app/legacy"]
+
+[tool.ruff.lint]
+# Sélection volontairement modeste : erreurs réelles (Pyflakes) + style de
+# base (pycodestyle) — pas de règles de style byzantines qui bloqueraient
+# la CI sur des désaccords de goût plutôt que de vrais problèmes.
+select = ["E", "F"]
+ignore = ["E501"]  # lignes longues tolérées (docstrings en français, URLs) — pas une erreur fonctionnelle

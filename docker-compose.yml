@@ -1,0 +1,68 @@
+# docker-compose.yml
+# ====================
+# Orchestration locale/déploiement (DQE-12). Point d'entrée recommandé :
+# http://localhost:${NGINX_PORT:-8080} (reverse-proxy nginx, une seule origine).
+#
+# Lancement :
+#   cp .env.example .env   # optionnel : tout a une valeur par défaut
+#   docker compose up --build
+#
+# Les ports backend (8000) et frontend (3000) restent exposés séparément pour
+# le débogage (ex. Swagger UI direct sur :8000/docs), mais l'image frontend
+# est construite pour passer par nginx (NEXT_PUBLIC_API_URL="", URLs relatives) —
+# y accéder directement sur :3000 sans passer par nginx ne permettra pas les
+# appels API (404), sauf à reconstruire l'image avec
+# `--build-arg NEXT_PUBLIC_API_URL=http://localhost:8000`.
+
+services:
+  backend:
+    # ATTENTION : ne pas lancer avec `--scale backend=N` (N>1) ni ajouter de
+    # réplicas — app/services/ml_job_store.py stocke les tâches ML (clustering,
+    # k-selection) en mémoire process, sans coordination inter-instances. Avec
+    # plusieurs instances, une requête de suivi de statut (GET /ml/jobs/{id})
+    # pourrait atterrir sur une instance qui n'a jamais vu ce job → 404 alors
+    # qu'il existe ailleurs. Passer par un store partagé (Redis) serait le
+    # prérequis avant toute scalabilité horizontale du backend.
+    build:
+      context: ./backend
+    environment:
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
+      EDA_ANON_SALT: ${EDA_ANON_SALT:-dev_salt_change_in_prod}
+    volumes:
+      - backend_uploads:/app/uploaded_files
+      - backend_keys:/app/anonymization_keys
+      - backend_datasets:/app/dataset_store
+    ports:
+      - "8000:8000"  # débogage direct (Swagger : http://localhost:8000/docs) — voir note ci-dessus
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ""  # chaîne vide -> URLs relatives, adaptées au reverse-proxy nginx
+    ports:
+      - "3000:3000"  # débogage direct — voir note en tête de fichier (fonctionnalité API limitée sans nginx)
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "${NGINX_PORT:-8090}:80"
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  backend_uploads:
+  backend_keys:
+  backend_datasets:

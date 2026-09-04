@@ -1,0 +1,18 @@
+# Normalize line endings for cross-platform compatibility (Windows <-> Linux DGX)
+* text=auto
+
+# Shell scripts must stay LF for Linux DGX/Docker compatibility
+*.sh text eol=lf
+*.service text eol=lf
+nginx/nginx.conf text eol=lf
+systemd/*.conf text eol=lf
+Dockerfile text eol=lf
+
+# Windows batch files use CRLF
+*.bat text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.ico binary
+*.whl binary
