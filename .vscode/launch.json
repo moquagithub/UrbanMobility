@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Web app (uvicorn --reload)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--reload", "--port", "8000"],
+      "cwd": "${workspaceFolder}",
+      "jinja": false
+    },
+    {
+      "name": "make_maps (Aix-en-Provence)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/make_maps.py",
+      "args": ["Aix-en-Provence, France"],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "demo",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/demo.py",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BicycleLane — opportunity explorer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <aside id="panel">
+    <div class="head">
+      <h1>BicycleLane<span data-i18n="subtitle">opportunity explorer</span></h1>
+      <select id="lang" title="Language">
+        <option value="fr">Français</option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+      </select>
+    </div>
+
+    <form id="city-form">
+      <input id="city" type="text" value="Aix-en-Provence, France"
+             data-i18n-ph="cityPh" autocomplete="off" />
+      <button type="submit" id="go" data-i18n="analyze">Analyze</button>
+    </form>
+
+    <div class="aoi">
+      <button type="button" id="draw-area" data-i18n="drawArea">Draw area of interest</button>
+      <button type="button" id="clear-area" hidden data-i18n="clearArea">Clear area</button>
+    </div>
+
+    <p id="status" class="status"></p>
+
+    <section id="controls" hidden>
+      <h2 data-i18n="criteria">Criteria &amp; weights</h2>
+      <p class="hint" data-i18n="hint">Toggle a criterion and drag its weight (0–1).</p>
+      <div id="criteria"></div>
+
+      <label class="prio">
+        <input id="show-priority" type="checkbox" />
+        <span data-i18n="showPriority">Priority layer (composite)</span>
+      </label>
+
+      <label class="topk">
+        <span data-i18n="showTop">Show top</span> <output id="topk-out">50</output>
+        <input id="topk" type="range" min="10" max="500" step="10" value="50" />
+      </label>
+    </section>
+
+    <section id="results" hidden>
+      <h2><span data-i18n="ranked">Ranked opportunities</span> <span id="result-count"></span></h2>
+      <div class="exports">
+        <button id="dl-geojson" type="button">⬇ GeoJSON</button>
+        <button id="dl-csv" type="button">⬇ CSV</button>
+      </div>
+      <ol id="ranklist"></ol>
+    </section>
+  </aside>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  bicyclelane:
+    image: bicyclelane:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # ── GPU access (NVIDIA DGX Spark / Blackwell GB10) ─────────────────────
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ports:
+      - "8080:8080"
+    volumes:
+      # Persist OSM cache and map outputs outside the container
+      - ./outputs:/app/outputs
+      - ./cache:/app/.cache
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OMP_NUM_THREADS=8
+      # Optional real-data env vars (leave blank to use weighted-OSM defaults)
+      - BICYCLELANE_INSEE=         # Path to INSEE gridded population file
+      - BICYCLELANE_RIDERSHIP=     # Path to SNCF ridership CSV
+      - BICYCLELANE_ENROLMENT=     # Path to Éducation nationale enrolment CSV
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/detectors"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

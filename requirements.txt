@@ -1,0 +1,15 @@
+# BicycleLane v1 runtime + dev dependencies.
+# Versions reflect the validated environment (Python 3.12, anaconda).
+osmnx>=2.0,<3
+geopandas>=1.0
+shapely>=2.0
+networkx>=3.0
+scipy>=1.10
+scikit-learn>=1.3
+folium>=0.16
+pandas>=2.0
+numpy>=1.24
+pytest>=7.0
+# web MVP (BL-17)
+fastapi>=0.110
+uvicorn[standard]>=0.29
