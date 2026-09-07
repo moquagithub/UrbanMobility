@@ -1,0 +1,26 @@
+# Secrets — NEVER COMMIT
+.env
+*.key
+*.pem
+
+# Generated data
+data/reports/
+data/uploads/
+data/joblogs/
+data/jobs.json
+data/temp_catalogue.xlsx
+data/bench_catalogue.xlsx
+data/test1.xlsx
+
+# Backups
+*.bak
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Misc
+.DS_Store
+*.zip

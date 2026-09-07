@@ -1,0 +1,58 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Create Python venv",
+            "type": "shell",
+            "command": "python -m venv .venv",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Install dependencies",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-lc",
+                "source .venv/bin/activate && python -m pip install -r requirements.txt"
+            ],
+            "dependsOn": "Create Python venv",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Run Streamlit",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-lc",
+                "source .venv/bin/activate && python -m streamlit run app.py"
+            ],
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Run tests",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-lc",
+                "source .venv/bin/activate && python -m pytest"
+            ],
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ]
+}

@@ -1,0 +1,60 @@
+# ============================================================================
+#  docker-compose.public.yml — Facade publique
+#
+#  Ajoute UN SEUL service exposable : l'interface web.
+#  vLLM, MySQL et MinIO restent sur le reseau interne, invisibles de l'exterieur.
+#
+#  Usage :
+#    docker compose -p versionete2026-main \
+#      -f docker-compose.yml -f docker-compose.spark.yml -f docker-compose.public.yml \
+#      up -d webapp
+# ============================================================================
+
+services:
+
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mobility-pdf-generator:latest
+    restart: unless-stopped
+
+    env_file: .env
+    environment:
+      PYTHONUNBUFFERED: "1"
+      # Mot de passe d'acces — OBLIGATOIRE, a definir dans .env
+      APP_PASSWORD: ${APP_PASSWORD}
+      # Garde-fous : proteger le GPU partage
+      MAX_FILE_MB: "5"
+      MAX_ROWS: "5"
+      MOBIMIX_DATA_DIR: "/app/data"
+
+    # 127.0.0.1 = ecoute UNIQUEMENT en local sur la Spark.
+    # L'exposition publique passe par un tunnel (cloudflared / ngrok / ssh),
+    # jamais par une ouverture de port directe.
+    ports:
+      - "127.0.0.1:8501:8501"
+
+    volumes:
+      - ./data:/app/data
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+    entrypoint: ["streamlit", "run", "dashboard/public_app.py",
+                 "--server.port=8501",
+                 "--server.address=0.0.0.0",
+                 "--server.headless=true",
+                 "--browser.gatherUsageStats=false",
+                 "--server.maxUploadSize=5"]
+
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8501/_stcore/health').status==200 else sys.exit(1)"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 60s

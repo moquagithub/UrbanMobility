@@ -1,0 +1,109 @@
+# ============================================================================
+#  docker-compose.yml — Base : MySQL + MinIO + migrations + pipeline
+#  Adapte a la DGX Spark de yzaitouni (ports 9000/9001 deja pris sur l'hote)
+# ============================================================================
+
+services:
+
+  # ==========================================================================
+  # MySQL — etat du pipeline + table llm_calls_log (mesures de temps)
+  # ==========================================================================
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    ports:
+      - "3306:3306"          # libre sur la Spark
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Tables de base creees AUTOMATIQUEMENT au 1er demarrage (volume vide).
+      - ./shared/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # ==========================================================================
+  # MinIO — stockage des fichiers produits (CSV, notebooks, figures, PDF)
+  #   ATTENTION : 9000 et 9001 sont DEJA PRIS sur la Spark -> 9100/9101
+  # ==========================================================================
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}   # >= 8 caracteres OBLIGATOIRE
+    ports:
+      - "9100:9000"          # API S3
+      - "9101:9001"          # console web -> http://localhost:9101
+    volumes:
+      - minio_data:/data
+
+  # ==========================================================================
+  # migrate — applique les migrations v2 -> v11 puis s'arrete
+  # ==========================================================================
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mobility-pdf-generator:latest
+    env_file: .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+    entrypoint: ["python"]
+    command: ["run_migrations.py"]
+    restart: "no"
+
+  # ==========================================================================
+  # pipeline — orchestrateur (Auto1 -> Auto2 -> Auto3)
+  # ==========================================================================
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mobility-pdf-generator:latest
+    env_file: .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      mysql:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      minio:
+        condition: service_started
+    volumes:
+      - ./data:/app/data
+    command:
+      - "--catalogue"
+      - "/app/data/bench_catalogue.xlsx"
+      - "--once"
+
+  # ==========================================================================
+  # dry-run — etat MySQL sans rien executer (ne demarre pas automatiquement)
+  #   Usage : docker compose run --rm dry-run
+  # ==========================================================================
+  dry-run:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mobility-pdf-generator:latest
+    env_file: .env
+    profiles: ["tools"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: ["--dry-run", "--once"]
+
+# ============================================================================
+# Volumes nommes = PERSISTANCE (survivent a down/up et aux rebuilds).
+# Seul "docker compose down -v" les efface.
+# ============================================================================
+volumes:
+  mysql_data:
+  minio_data:

@@ -1,0 +1,42 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv_new/
+.venv/
+env/
+
+# Secrets — never bake into image
+.env
+
+# Large generated artefacts (mounted as volumes at runtime)
+projects/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# CI / Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Logs
+*.log
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,78 @@
+# ============================================================================
+#  docker-compose.spark.yml — Surcouche DGX SPARK (GB10, ARM64, mono-GPU)
+#
+#  Deploie TON serveur vLLM avec Llama-3.1-8B-Instruct.
+#
+#  Usage :
+#     docker compose -f docker-compose.yml -f docker-compose.spark.yml up -d
+#
+#  Specificites Spark prises en compte :
+#    - image NGC ARM64 (l'image vllm/vllm-openai publique est x86_64 uniquement)
+#    - tensor-parallel-size = 1 (un seul GPU GB10)
+#    - memoire UNIFIEE 128 Go partagee avec l'OS ET avec les vLLM root existants
+#      (qui consomment deja ~0.50) -> on se limite a 0.25
+#    - port hote 8100 (8000/8001/3001/3002 sont deja pris)
+# ============================================================================
+
+services:
+
+  vllm:
+    # Verifier la derniere version :
+    #   catalog.ngc.nvidia.com/orgs/nvidia/containers/vllm
+    image: nvcr.io/nvidia/vllm:26.02-py3
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    ipc: host
+    ulimits:
+      memlock: -1
+      stack: 67108864
+
+    environment:
+      HF_TOKEN: ${HF_TOKEN}
+      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN}
+      PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+
+    volumes:
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
+
+    ports:
+      - "8100:8000"          # 8100 sur l'hote -> 8000 dans le conteneur
+
+    # entrypoint bash : robuste quel que soit l'entrypoint par defaut de l'image
+    entrypoint: ["/bin/bash", "-lc"]
+    command:
+      - >
+        vllm serve NousResearch/Meta-Llama-3.1-8B-Instruct
+        --served-model-name NousResearch/Meta-Llama-3.1-8B-Instruct
+        --tensor-parallel-size 1
+        --max-model-len 8192
+        --gpu-memory-utilization 0.25
+        --host 0.0.0.0
+        --port 8000
+
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health').status==200 else sys.exit(1)"]
+      interval: 15s
+      timeout: 10s
+      retries: 80
+      start_period: 1200s      # 20 min : telechargement + chargement
+
+  pipeline:
+    depends_on:
+      mysql:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      minio:
+        condition: service_started
+      vllm:
+        condition: service_healthy
